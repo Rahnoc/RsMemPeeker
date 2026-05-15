@@ -7,12 +7,14 @@
 
 
 import SwiftUI
+import Combine
 
 // 針對記憶體顯示
 
 
 @Observable
 class MemoryMonitor {
+    // 記憶體壓力
     var pressureLevel: Int32 = -1
     private var timer: Timer?
 
@@ -22,6 +24,9 @@ class MemoryMonitor {
         }
     }
     
+    // 交換檔大小
+    var swapInfo: SwapUsageInfo?
+    
     
     init() {
         start()
@@ -30,10 +35,13 @@ class MemoryMonitor {
     func start() {
         // 首次執行
         self.pressureLevel = self.getMemoryPressure()
+        updateswapInfo()
+        
         
         // 每 5 秒更新一次
         timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
             self?.pressureLevel = self?.getMemoryPressure() ?? -1
+            self?.updateswapInfo()
         }
         timer?.tolerance = 0.5
     }
@@ -49,6 +57,10 @@ class MemoryMonitor {
         // 呼叫系統接口讀取記憶體壓力等級
         let result = sysctlbyname("kern.memorystatus_vm_pressure_level", &level, &size, nil, 0)
         return result == 0 ? level : -1 // 失敗回傳 -1
+    }
+    
+    private func updateswapInfo() {
+        self.swapInfo = getSwapUsage()
     }
     
 }

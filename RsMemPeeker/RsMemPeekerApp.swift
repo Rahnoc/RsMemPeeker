@@ -12,6 +12,7 @@ struct RsMemPeekerApp: App {
     @State private var mMnt = MemoryMonitor()
     @State private var sMnt = SystemMonitor()
     
+    
     // 這會自動將設定儲存在 UserDefaults 中
     @AppStorage("showTextInMenuBar") private var showStorageText: Bool = false
     //@State private var showStorageText: Bool = false
@@ -26,7 +27,7 @@ struct RsMemPeekerApp: App {
         return Bundle.main.infoDictionary?["CFBundleVersion"] as? String
     }
     private var version:String {
-        return "\(releaseVersionNumber ?? "1.0") (\(buildVersionNumber ?? "1"))"
+        return "\(releaseVersionNumber ?? "1.0") (\(buildVersionNumber ?? "5"))"
     }
     
     
@@ -59,8 +60,37 @@ struct RsMemPeekerApp: App {
                 // Memory:
                 Label("記憶體壓力: \(mMnt.pLevel.description)", systemImage: "memorychip")
                     .foregroundColor( mMnt.pLevel.color )
-                Button("開啟 活動監視器") {openActivityMonitor()}
-                    .buttonStyle(.borderedProminent)
+                
+                // Swap 監控：每 5 秒安全重新算一次，只有大於 0 時才高亮提示
+                if let swap = mMnt.swapInfo {
+                    HStack(spacing: 8) {
+                        Label("Swap 使用:", systemImage: "arrow.left.and.right.square")
+                            .foregroundColor(.secondary) 
+                        
+                        // 建立一個動態變數來計算顏色
+                        let swapColor: Color = {
+                            if swap.used == 0 {
+                                return .secondary // 0 bytes 顯示穩重灰
+                            } else if swap.used > 5 * 1024 * 1024 * 1024 {
+                                return .red       // 超過 5 GB 顯示危險紅（數字可依需求調整）
+                            } else {
+                                return .orange    // 介於中間顯示警告橘
+                            }
+                        }()
+                        
+                        Text(swap.usedFormatted)
+                            .font(.system(.body, design: .monospaced))
+                            .foregroundColor(swapColor)
+                    }
+                    .padding(.top, 2)
+                }
+                Button("開啟 活動監視器") {
+                    openActivityMonitor()
+                    NSApp.keyWindow?.orderOut(nil)
+                    NSApp.deactivate()
+                }
+                .buttonStyle(.borderedProminent)
+                
                 
                 Divider()
                 
@@ -69,7 +99,11 @@ struct RsMemPeekerApp: App {
                 Toggle("顯示於選單列", isOn: $showStorageText)
                     .toggleStyle(.automatic)
                 Button("更新顯示") { sMnt.updateData() }
-                Button("開啟 硬碟用量") {openSysDiskUsage()}
+                Button("開啟 硬碟用量") {
+                    openSysDiskUsage()
+                    NSApp.keyWindow?.orderOut(nil)
+                    NSApp.deactivate() 
+                }
                     .buttonStyle(.borderedProminent)
                 
                 Divider()
@@ -79,8 +113,9 @@ struct RsMemPeekerApp: App {
                     NSApplication.shared.terminate(nil)
                 }
             }
-            //.frame(width: 220)
             .padding()
+            .frame(width: 220)
+            
             
         } label: {
             // 選單列上的圖示/文字，會隨 monitor 狀態更新
