@@ -50,7 +50,25 @@ struct RsMemPeekerApp: App {
                     
                     // 呼叫系統標準的關於面板
                     //NSApp.orderFrontStandardAboutPanel(nil)
-                    NSApplication.shared.orderFrontStandardAboutPanel(nil)
+                    // 使用info那邊的plist
+                    //NSApplication.shared.orderFrontStandardAboutPanel(nil)
+                    
+
+                    // 顯示自訂字串到 about 裡:
+                    let customText = "「まだだ！まだ終わらんよ！」"
+                    let paragraphStyle = NSMutableParagraphStyle()
+                    paragraphStyle.alignment = .center
+                    // 包裝成系統要的 NSAttributedString
+                    let attributes: [NSAttributedString.Key: Any] = [
+                        .paragraphStyle: paragraphStyle,
+                        .foregroundColor: NSColor.labelColor // 確保文字顏色適應深色/淺色模式
+                    ]
+                    let creditsString = NSAttributedString(string: customText, attributes: attributes)
+                    // 呼叫並傳入 options 字典
+                    NSApplication.shared.orderFrontStandardAboutPanel(options: [
+                        .credits: creditsString
+                    ])
+                    
                 }
                 .buttonStyle(.accessoryBar)
                 
