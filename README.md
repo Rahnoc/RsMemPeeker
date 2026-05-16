@@ -1,12 +1,10 @@
-#  RsMemPeeker
+# RsMemPeeker
 
 > 「まだだ！まだ終わらんよ！」
 >
 > (能戰⋯⋯ 我還能戰的呀！)
 
-RS Memory Peeker
-
-Agent application.
+RS Memory Peeker - Agent application.
 
 根據記憶體壓力更改選單列 icon 的顏色 (綠/橘/紅)。
 
@@ -48,7 +46,7 @@ iOS 26 simulator 之類開始啟動時更是嚴重，會開始吃 swap 到 8GB ~
 
 -----
 
-適合對象：
+## 適合對象：
 
 還在 8G 256G 奮戰的戰士們， 尤其是**被 Macbook Neo 8G 256G 宣傳騙進來**的。
 

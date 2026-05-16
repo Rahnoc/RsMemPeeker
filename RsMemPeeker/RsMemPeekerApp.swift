@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+
+
 @main
 struct RsMemPeekerApp: App {
     @State private var mMnt = MemoryMonitor()
@@ -153,12 +155,6 @@ struct RsMemPeekerApp: App {
         }
         .menuBarExtraStyle(.window)
         
-        
-        /*
-        WindowGroup {
-            ContentView()
-        }
-        */
     }
     
     

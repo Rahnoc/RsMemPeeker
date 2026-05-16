@@ -5,50 +5,47 @@
 //  Created by Rahnoc on 2025/12/19.
 //
 
-
 import SwiftUI
 import Combine
 
+
+
 // 針對記憶體顯示
-
-
 @Observable
 class MemoryMonitor {
     // 記憶體壓力
-    var pressureLevel: Int32 = -1
+    private var pressureLevel: Int32 = -1
     private var timer: Timer?
-
-    var pLevel: MemPreLevel {
-        get {
-            MemPreLevel.convert(num: pressureLevel)
-        }
-    }
     
+    
+    // 記憶體壓力等級
+    var pLevel: MemPreLevel { MemPreLevel.convert(num: pressureLevel) }
     // 交換檔大小
     var swapInfo: SwapUsageInfo?
     
+    // ---------------
     
     init() {
         start()
     }
-
+    
+    // 循環用
     func start() {
         // 首次執行
-        self.pressureLevel = self.getMemoryPressure()
-        updateswapInfo()
+        pressureLevel = getMemoryPressure()
+        swapInfo = getSwapUsage()
         
         
         // 每 5 秒更新一次
         timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
             self?.pressureLevel = self?.getMemoryPressure() ?? -1
-            self?.updateswapInfo()
+            self?.swapInfo = self?.getSwapUsage() ?? nil
         }
         timer?.tolerance = 0.5
     }
     
     
     // --------------
-    
     
     // 回傳值為 1,2,4
     private func getMemoryPressure() -> Int32 {
@@ -59,19 +56,39 @@ class MemoryMonitor {
         return result == 0 ? level : -1 // 失敗回傳 -1
     }
     
-    private func updateswapInfo() {
-        self.swapInfo = getSwapUsage()
+    // --------------
+    
+    // 取得交換檔用量
+    private func getSwapUsage() -> SwapUsageInfo? {
+        var mib: [Int32] = [CTL_VM, VM_SWAPUSAGE]
+        var usage = xsw_usage()
+        var size = MemoryLayout<xsw_usage>.size
+        
+        let result = sysctl(&mib, u_int(mib.count), &usage, &size, nil, 0)
+        
+        if result == 0 {
+            return SwapUsageInfo(
+                total: usage.xsu_total,
+                used: usage.xsu_used,
+                free: usage.xsu_avail
+            )
+        } else {
+            print("無法取得 Swap 資訊")
+            return nil
+        }
     }
     
 }
 
 
+// ------------------
+
 // 記憶體壓力等級
 public enum MemPreLevel: CustomStringConvertible {
     case unknow
-    case normal
-    case warning
-    case critical
+    case normal     // 1
+    case warning    // 2
+    case critical   // 4
     
     // 1,2,4 parser
     static func convert(num:Int32) -> Self {
@@ -113,3 +130,25 @@ public enum MemPreLevel: CustomStringConvertible {
         }
     }
 }
+
+
+// 針對 swap 用量。
+struct SwapUsageInfo {
+    var total: UInt64  // 總 Swap 空間 (Bytes)
+    var used: UInt64   // 已使用 Swap (Bytes)
+    var free: UInt64   // 剩餘 Swap (Bytes)
+    
+    // 轉為人類可讀的字串格式 (例如: "1.02 GB")
+    var usedFormatted: String {
+        ByteCountFormatter.string(fromByteCount: Int64(used), countStyle: .memory)
+    }
+}
+
+/*
+// Test case
+return SwapUsageInfo(
+    total: 10 * 1024 * 1024 * 1024,
+    used: UInt64(4.02 * 1024 * 1024 * 1024),
+    free: UInt64(5.08 * 1024 * 1024 * 1024)
+)
+*/
