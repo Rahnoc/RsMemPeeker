@@ -17,6 +17,9 @@ class MemoryMonitor {
     private var pressureLevel: Int32 = -1
     private var timer: Timer?
     
+    // 使用的 mock.
+    private var mockAs: DeviceCapibilityType?
+    
     
     // 記憶體壓力等級
     var pLevel: MemPreLevel { MemPreLevel.convert(num: pressureLevel) }
@@ -25,8 +28,17 @@ class MemoryMonitor {
     
     // ---------------
     
-    init() {
-        start()
+    // mockAs 非 nil 時，根據 mock目標定時亂取當作資訊。
+    init(mockAs: DeviceCapibilityType?=nil) {
+        self.mockAs = mockAs
+        
+        if Thread.isMainThread {
+            start()
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.start()
+            }
+        }
     }
     
     // 循環用
@@ -60,6 +72,23 @@ class MemoryMonitor {
     
     // 取得交換檔用量
     private func getSwapUsage() -> SwapUsageInfo? {
+        
+        // A. 如果為 mock 模式時：
+        if let target = mockAs {
+            let rndBoundary = DeviceCapibilityType.getMockSwapRndBoundary(target: target)
+            let used = Double.random(in: 0 ... rndBoundary)
+            
+            return SwapUsageInfo(
+                total: UInt64(rndBoundary * 1024 * 1024 * 1024),
+                used: UInt64(used * 1024 * 1024 * 1024),         // 這裡 使用的交換檔 為本 app 看的重點。
+                free: UInt64((rndBoundary - used) * 1024 * 1024 * 1024)
+            )
+        }
+        
+        
+        // --------------
+        // B. 不然 根據實機抓到的資料計算
+        
         var mib: [Int32] = [CTL_VM, VM_SWAPUSAGE]
         var usage = xsw_usage()
         var size = MemoryLayout<xsw_usage>.size

@@ -15,13 +15,21 @@ class SystemMonitor {
     private var timer: Timer?
     var freeDiskSpace: String = ""
     
+    var isRefreshing: Bool = false
     
     
     // -----------
     
     init() {
         updateData()
-        start()
+        
+        if Thread.isMainThread {
+            start()
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.start()
+            }
+        }
     }
     
     
@@ -29,7 +37,7 @@ class SystemMonitor {
     
     // 循環啟動用
     func start() {
-        // 硬碟空間變化較慢，建議每 30~60 秒更新一次即可
+        // 硬碟空間變化較慢，每 30~60 秒更新一次即可
         timer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
             self?.updateData()
         }
@@ -37,8 +45,17 @@ class SystemMonitor {
     }
     
     func updateData() {
+        guard !isRefreshing else { return }
+        isRefreshing = true
+        
         let space = getFreeDiskSpace()
         self.freeDiskSpace = formatBytes(space)
+        
+        
+        // 限制使用者手動更新後，必須等待 1.5 秒冷卻時間，才能再次點擊
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            self?.isRefreshing = false
+        }
     }
     
     
