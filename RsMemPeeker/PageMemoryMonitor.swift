@@ -57,7 +57,7 @@ class PageMemoryMonitor {
     private func checkSystemLoad() -> Double {
         // A. 模擬
         if let target = mockAs {
-            let bound = DeviceCapibilityType.getPageOutRndBoundary(targt: target)
+            let bound = DeviceCapibilityType.getPageOutRndBoundary(target: target)
             return Double.random(in: 0 ... bound)
         }
         

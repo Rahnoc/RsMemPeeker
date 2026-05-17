@@ -90,8 +90,8 @@ enum DeviceCapibilityType {
     }
     
     /// 取得 mock 用的 page out (MB/s) 的亂取範圍。
-    static func getPageOutRndBoundary(targt: Self) -> Double {
-        switch targt {
+    static func getPageOutRndBoundary(target: Self) -> Double {
+        switch target {
         case .mem8: 54.0
         case .mem16: 110.0
         case .mem24up: 220.0
