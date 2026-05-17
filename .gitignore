@@ -1,0 +1,9 @@
+# Xcode 專有的個人設定與快取（斬草除根）
+xcuserdata/
+*.xcuserdatad/
+*.xcuserstate
+
+# 編譯產生的暫存檔
+DerivedData/
+build/
+.DS_Store
