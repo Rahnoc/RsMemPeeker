@@ -36,9 +36,9 @@ enum DeviceCapibilityType {
     var pageOutBounds: (warn: Double, crit: Double) {
         switch self {
             // 針對 8G 機型 (如 Air M3 8G)：硬碟較慢、RAM極小，稍微持續置換就該注意
-            // > 超過 10 MB/s 算輕微勉強
-            // > 超過 40 MB/s 算嚴重危險
-            case .mem8:     return (10.0, 40.0)
+            // > 超過 8 MB/s 算輕微勉強
+            // > 超過 30 MB/s 算嚴重危險
+            case .mem8:     return (8.0, 30.0)
             
             // 針對 16G 機型
             // > 超過 25 MB/s 算輕微勉強，記憶體剛好用完
